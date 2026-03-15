@@ -731,7 +731,7 @@
     $('audit-btn').disabled = true;
 
     const domain = new URL(rawUrl).hostname;
-    const PROXY = 'https://corsproxy.io/?';
+    const PROXY = 'https://corsproxy.io/?url=';
     const apiUrl = `${PROXY}${encodeURIComponent(`${rawUrl}/wp-json/wp/v2/pages?per_page=100&_fields=id,title,slug,excerpt,content,featured_media,status,modified,parent`)}`;
 
     try {
