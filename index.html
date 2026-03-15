@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEOX — WordPress SEO Auditor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #030308;
+      --deep: #0d0415;
+      --card: #110820;
+      --border: rgba(180, 0, 255, 0.2);
+      --neon-purple: #b400ff;
+      --neon-red: #ff003c;
+      --neon-pink: #ff0080;
+      --neon-violet: #7b00ff;
+      --text: #e8d5ff;
+      --muted: rgba(232,213,255,0.35);
+      --mono: 'Share Tech Mono', monospace;
+      --display: 'Orbitron', sans-serif;
+      --body: 'Rajdhani', sans-serif;
+      --glow-purple: 0 0 20px rgba(180,0,255,0.6), 0 0 60px rgba(180,0,255,0.2);
+      --glow-red: 0 0 20px rgba(255,0,60,0.6), 0 0 60px rgba(255,0,60,0.2);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--body);
+      background: var(--black);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(180,0,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(180,0,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Radial glow blobs */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(180,0,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      animation: blobFloat 8s ease-in-out infinite;
+    }
+
+    @keyframes blobFloat {
+      0%, 100% { transform: translate(0,0); }
+      50% { transform: translate(80px, 60px); }
+    }
+
+    .blob2 {
+      position: fixed;
+      bottom: -200px;
+      right: -100px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255,0,60,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      animation: blobFloat2 10s ease-in-out infinite;
+    }
+
+    @keyframes blobFloat2 {
+      0%, 100% { transform: translate(0,0); }
+      50% { transform: translate(-60px, -80px); }
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3rem 2rem 6rem;
+    }
+
+    /* Header */
+    header {
+      margin-bottom: 3.5rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 2rem;
+    }
+
+    .logo {
+      font-family: var(--display);
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, var(--neon-red), var(--neon-purple), var(--neon-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      filter: drop-shadow(0 0 20px rgba(180,0,255,0.5));
+    }
+
+    .tagline {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    /* Input section */
+    .audit-form {
+      display: flex;
+      gap: 0;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .audit-form::before {
+      content: '//';
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--neon-purple);
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    #site-url {
+      flex: 1;
+      background: var(--deep);
+      border: 1px solid var(--border);
+      border-right: none;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      padding: 1rem 1rem 1rem 3rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    #site-url::placeholder { color: var(--muted); }
+
+    #site-url:focus {
+      border-color: var(--neon-purple);
+      box-shadow: var(--glow-purple);
+    }
+
+    #audit-btn {
+      background: linear-gradient(135deg, var(--neon-red), var(--neon-purple));
+      border: none;
+      color: #fff;
+      font-family: var(--display);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 1rem 2rem;
+      cursor: pointer;
+      transition: filter 0.2s, transform 0.1s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #audit-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.1);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    #audit-btn:hover { filter: brightness(1.3); }
+    #audit-btn:hover::after { opacity: 1; }
+    #audit-btn:active { transform: scale(0.98); }
+    #audit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Status bar */
+    #status-bar {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--neon-purple);
+      margin-bottom: 2rem;
+      min-height: 1.2rem;
+      letter-spacing: 0.1em;
+      display: none;
+    }
+
+    #status-bar.visible { display: block; }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--neon-purple);
+      margin-right: 8px;
+      animation: pulse 1s ease-in-out infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    /* Site summary bar */
+    #summary {
+      display: none;
+      background: var(--deep);
+      border: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      margin-bottom: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #summary::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--neon-red), var(--neon-purple), var(--neon-pink));
+    }
+
+    #summary.visible { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.5rem; }
+
+    .summary-stat { text-align: center; }
+
+    .summary-stat .val {
+      font-family: var(--display);
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--neon-red), var(--neon-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+    }
+
+    .summary-stat .lbl {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    /* Page cards */
+    .page-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 1.8rem;
+      margin-bottom: 1rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+      animation: cardIn 0.4s ease both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-card:hover { border-color: rgba(180,0,255,0.45); }
+
+    .page-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+    }
+
+    .card-grade-A .page-card::before { background: #00ff9f; box-shadow: 0 0 12px #00ff9f; }
+    .card-grade-B .page-card::before { background: var(--neon-purple); box-shadow: var(--glow-purple); }
+    .card-grade-C .page-card::before { background: #ff9f00; box-shadow: 0 0 12px #ff9f00; }
+    .card-grade-D .page-card::before { background: var(--neon-red); box-shadow: var(--glow-red); }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.2rem;
+      gap: 1rem;
+    }
+
+    .card-meta {}
+
+    .page-id {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--neon-purple);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+    }
+
+    .page-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.3rem;
+      line-height: 1.3;
+    }
+
+    .page-slug {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    /* Score badge */
+    .score-badge {
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .score-num {
+      font-family: var(--display);
+      font-size: 2.2rem;
+      font-weight: 900;
+      line-height: 1;
+      display: block;
+    }
+
+    .card-grade-A .score-num { color: #00ff9f; text-shadow: 0 0 20px #00ff9f; }
+    .card-grade-B .score-num { color: var(--neon-purple); text-shadow: var(--glow-purple); }
+    .card-grade-C .score-num { color: #ff9f00; text-shadow: 0 0 20px #ff9f00; }
+    .card-grade-D .score-num { color: var(--neon-red); text-shadow: var(--glow-red); }
+
+    .score-grade {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 0.2rem;
+    }
+
+    /* Metrics grid */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .metric {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .metric-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .metric.pass .metric-dot { background: #00ff9f; box-shadow: 0 0 6px #00ff9f; }
+    .metric.pass { color: rgba(232,213,255,0.7); }
+    .metric.fail .metric-dot { background: var(--neon-red); box-shadow: 0 0 6px var(--neon-red); }
+    .metric.partial .metric-dot { background: #ff9f00; box-shadow: 0 0 6px #ff9f00; }
+    .metric.partial { color: rgba(232,213,255,0.7); }
+
+    /* Score bar */
+    .score-bar-wrap {
+      margin-top: 1.2rem;
+      height: 3px;
+      background: rgba(255,255,255,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+    }
+
+    .card-grade-A .score-bar-fill { background: linear-gradient(90deg, #00ff9f, #00ffcc); }
+    .card-grade-B .score-bar-fill { background: linear-gradient(90deg, var(--neon-violet), var(--neon-purple)); }
+    .card-grade-C .score-bar-fill { background: linear-gradient(90deg, #ff6a00, #ff9f00); }
+    .card-grade-D .score-bar-fill { background: linear-gradient(90deg, var(--neon-red), var(--neon-pink)); }
+
+    /* Error */
+    #error-msg {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--neon-red);
+      padding: 1rem;
+      border: 1px solid rgba(255,0,60,0.3);
+      display: none;
+      letter-spacing: 0.05em;
+    }
+
+    #error-msg.visible { display: block; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--black); }
+    ::-webkit-scrollbar-thumb { background: var(--neon-purple); }
+
+    @media (max-width: 600px) {
+      .logo { font-size: 1.5rem; }
+      .audit-form { flex-direction: column; }
+      #site-url { border-right: 1px solid var(--border); border-bottom: none; }
+      #audit-btn { padding: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="blob2"></div>
+
+<div class="wrapper">
+
+  <header>
+    <div>
+      <div class="logo">SEOX</div>
+      <div class="tagline">WordPress On-Page SEO Auditor</div>
+    </div>
+    <div class="tagline" id="timestamp"></div>
+  </header>
+
+  <div class="audit-form">
+    <input type="text" id="site-url" placeholder="https://yoursite.com" value="https://ansariaviationacademy.com" />
+    <button id="audit-btn">Run Audit</button>
+  </div>
+
+  <div id="status-bar"><span class="status-dot"></span><span id="status-text">Initializing...</span></div>
+  <div id="error-msg"></div>
+  <div id="summary"></div>
+  <div id="pages-container"></div>
+
+</div>
+
+<script>
+  // ─── Utilities ────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+
+  function setStatus(msg) {
+    $('status-bar').classList.add('visible');
+    $('status-text').textContent = msg;
+  }
+
+  function clearStatus() {
+    $('status-bar').classList.remove('visible');
+  }
+
+  function showError(msg) {
+    const el = $('error-msg');
+    el.textContent = '// ERROR: ' + msg;
+    el.classList.add('visible');
+  }
+
+  function hideError() {
+    $('error-msg').classList.remove('visible');
+  }
+
+  function wordCount(html) {
+    const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    return text.split(' ').filter(w => w.length > 0).length;
+  }
+
+  function extractHtags(html) {
+    const h1 = (html.match(/<h1[\s>]/gi) || []).length;
+    const h2 = (html.match(/<h2[\s>]/gi) || []).length;
+    const h3 = (html.match(/<h3[\s>]/gi) || []).length;
+    return { h1, h2, h3 };
+  }
+
+  function extractImages(html) {
+    const imgs = html.match(/<img[^>]+>/gi) || [];
+    const withAlt = imgs.filter(img => /alt="[^"]{2,}"/.test(img));
+    return { total: imgs.length, withAlt: withAlt.length };
+  }
+
+  function hasInternalLinks(html, domain) {
+    const links = html.match(/href="([^"]+)"/gi) || [];
+    const internal = links.filter(l => l.includes(domain));
+    return internal.length;
+  }
+
+  function isSlugClean(slug) {
+    const stopWords = ['and','the','of','in','a','to','for','on','with','is','it','at','by','or'];
+    const parts = slug.split('-');
+    const hasStop = parts.some(p => stopWords.includes(p));
+    const tooLong = slug.length > 60;
+    const hasNumbers = /\d{4,}/.test(slug);
+    return !hasStop && !tooLong && !hasNumbers;
+  }
+
+  function isRecentlyUpdated(modified) {
+    const then = new Date(modified);
+    const now = new Date();
+    const diffDays = (now - then) / (1000 * 60 * 60 * 24);
+    return diffDays < 180;
+  }
+
+  function titleLength(title) {
+    const clean = title.replace(/<[^>]+>/g, '').trim();
+    return clean.length;
+  }
+
+  function excerptLength(excerpt) {
+    const clean = excerpt.replace(/<[^>]+>/g, '').trim();
+    return clean.length;
+  }
+
+  function hasSchema(content) {
+    return content.includes('application/ld+json') || content.includes('schema.org');
+  }
+
+  // ─── Scoring Engine ───────────────────────────────────────────
+  function scorePage(page, domain) {
+    const content = page.content?.rendered || '';
+    const excerpt = page.excerpt?.rendered || '';
+    const title = page.title?.rendered || '';
+    const slug = page.slug || '';
+    const words = wordCount(content);
+    const htags = extractHtags(content);
+    const imgs = extractImages(content);
+    const internalLinks = hasInternalLinks(content, domain);
+    const titleLen = titleLength(title);
+    const excerptLen = excerptLength(excerpt);
+
+    const metrics = [];
+    let score = 0;
+
+    // 1. Title tag present & length (10pts)
+    if (title && titleLen >= 30 && titleLen <= 60) {
+      score += 10; metrics.push({ label: 'Title (optimal length)', pass: 'pass' });
+    } else if (title && titleLen > 0) {
+      score += 5; metrics.push({ label: 'Title (poor length)', pass: 'partial' });
+    } else {
+      metrics.push({ label: 'Title (missing)', pass: 'fail' });
+    }
+
+    // 2. Meta excerpt/description (10pts)
+    if (excerptLen >= 120 && excerptLen <= 160) {
+      score += 10; metrics.push({ label: 'Meta excerpt (optimal)', pass: 'pass' });
+    } else if (excerptLen > 0) {
+      score += 5; metrics.push({ label: 'Meta excerpt (set)', pass: 'partial' });
+    } else {
+      metrics.push({ label: 'No meta excerpt', pass: 'fail' });
+    }
+
+    // 3. Clean URL slug (10pts)
+    if (isSlugClean(slug)) {
+      score += 10; metrics.push({ label: 'Clean slug', pass: 'pass' });
+    } else {
+      metrics.push({ label: 'Slug needs work', pass: 'fail' });
+    }
+
+    // 4. H1 tag (10pts)
+    if (htags.h1 === 1) {
+      score += 10; metrics.push({ label: 'H1 tag (1 found)', pass: 'pass' });
+    } else if (htags.h1 > 1) {
+      score += 4; metrics.push({ label: `H1 overused (${htags.h1})`, pass: 'partial' });
+    } else {
+      metrics.push({ label: 'No H1 tag', pass: 'fail' });
+    }
+
+    // 5. H2/H3 structure (5pts)
+    if (htags.h2 >= 2) {
+      score += 5; metrics.push({ label: `H2/H3 structure (${htags.h2}H2s)`, pass: 'pass' });
+    } else if (htags.h2 === 1) {
+      score += 3; metrics.push({ label: 'Minimal H2 structure', pass: 'partial' });
+    } else {
+      metrics.push({ label: 'No H2/H3 structure', pass: 'fail' });
+    }
+
+    // 6. Content length (10pts)
+    if (words >= 600) {
+      score += 10; metrics.push({ label: `Content depth (${words}w)`, pass: 'pass' });
+    } else if (words >= 200) {
+      score += 5; metrics.push({ label: `Thin content (${words}w)`, pass: 'partial' });
+    } else {
+      metrics.push({ label: `Very thin (${words}w)`, pass: 'fail' });
+    }
+
+    // 7. Featured image (10pts)
+    if (page.featured_media && page.featured_media > 0) {
+      score += 10; metrics.push({ label: 'Featured image set', pass: 'pass' });
+    } else {
+      metrics.push({ label: 'No featured image', pass: 'fail' });
+    }
+
+    // 8. Image alt text (10pts)
+    if (imgs.total === 0) {
+      score += 5; metrics.push({ label: 'No images (neutral)', pass: 'partial' });
+    } else if (imgs.withAlt === imgs.total) {
+      score += 10; metrics.push({ label: `Alt text (${imgs.withAlt}/${imgs.total})`, pass: 'pass' });
+    } else if (imgs.withAlt > 0) {
+      score += 5; metrics.push({ label: `Alt text (${imgs.withAlt}/${imgs.total})`, pass: 'partial' });
+    } else {
+      metrics.push({ label: 'No alt text on images', pass: 'fail' });
+    }
+
+    // 9. Internal links (10pts)
+    if (internalLinks >= 3) {
+      score += 10; metrics.push({ label: `Internal links (${internalLinks})`, pass: 'pass' });
+    } else if (internalLinks >= 1) {
+      score += 5; metrics.push({ label: `Few internal links (${internalLinks})`, pass: 'partial' });
+    } else {
+      metrics.push({ label: 'No internal links', pass: 'fail' });
+    }
+
+    // 10. Schema markup (5pts)
+    if (hasSchema(content)) {
+      score += 5; metrics.push({ label: 'Schema markup found', pass: 'pass' });
+    } else {
+      metrics.push({ label: 'No schema markup', pass: 'fail' });
+    }
+
+    // 11. Recently updated (5pts)
+    if (isRecentlyUpdated(page.modified)) {
+      score += 5; metrics.push({ label: 'Recently updated', pass: 'pass' });
+    } else {
+      metrics.push({ label: 'Content stale (6m+)', pass: 'fail' });
+    }
+
+    // 12. Page status (5pts)
+    if (page.status === 'publish') {
+      score += 5; metrics.push({ label: 'Published', pass: 'pass' });
+    } else {
+      metrics.push({ label: `Status: ${page.status}`, pass: 'fail' });
+    }
+
+    const grade = score >= 85 ? 'A' : score >= 65 ? 'B' : score >= 45 ? 'C' : 'D';
+    return { score, grade, metrics };
+  }
+
+  // ─── Render ───────────────────────────────────────────────────
+  function renderSummary(pages, scores) {
+    const avg = Math.round(scores.reduce((a, s) => a + s.score, 0) / scores.length);
+    const aCount = scores.filter(s => s.grade === 'A').length;
+    const dCount = scores.filter(s => s.grade === 'D').length;
+
+    $('summary').className = 'visible';
+    $('summary').innerHTML = `
+      <div class="summary-stat"><span class="val">${pages.length}</span><span class="lbl">Pages Audited</span></div>
+      <div class="summary-stat"><span class="val">${avg}</span><span class="lbl">Avg Score</span></div>
+      <div class="summary-stat"><span class="val">${aCount}</span><span class="lbl">Grade A Pages</span></div>
+      <div class="summary-stat"><span class="val">${dCount}</span><span class="lbl">Critical Issues</span></div>
+    `;
+  }
+
+  function renderCard(page, result, index) {
+    const container = $('pages-container');
+    const wrapper = document.createElement('div');
+    wrapper.className = `card-grade-${result.grade}`;
+    wrapper.style.animationDelay = `${index * 0.07}s`;
+
+    const metricsHTML = result.metrics.map(m => `
+      <div class="metric ${m.pass}">
+        <span class="metric-dot"></span>
+        <span>${m.label}</span>
+      </div>
+    `).join('');
+
+    wrapper.innerHTML = `
+      <div class="page-card">
+        <div class="card-top">
+          <div class="card-meta">
+            <div class="page-id">PAGE ID: ${page.id}</div>
+            <div class="page-title">${page.title.rendered || '(No title)'}</div>
+            <div class="page-slug">/${page.slug}</div>
+          </div>
+          <div class="score-badge">
+            <span class="score-num">${result.score}</span>
+            <div class="score-grade">Grade ${result.grade}</div>
+          </div>
+        </div>
+        <div class="metrics">${metricsHTML}</div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-fill" style="width: 0%" data-width="${result.score}%"></div>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(wrapper);
+
+    // Animate bar after render
+    requestAnimationFrame(() => {
+      const bar = wrapper.querySelector('.score-bar-fill');
+      requestAnimationFrame(() => { bar.style.width = bar.dataset.width; });
+    });
+  }
+
+  // ─── Main Audit Function ──────────────────────────────────────
+  async function runAudit() {
+    let rawUrl = $('site-url').value.trim().replace(/\/$/, '');
+    if (!rawUrl) return;
+    if (!rawUrl.startsWith('http')) rawUrl = 'https://' + rawUrl;
+
+    // Reset
+    hideError();
+    $('pages-container').innerHTML = '';
+    $('summary').className = '';
+    $('summary').innerHTML = '';
+    $('audit-btn').disabled = true;
+
+    const domain = new URL(rawUrl).hostname;
+    const PROXY = 'https://corsproxy.io/?';
+    const apiUrl = `${PROXY}${encodeURIComponent(`${rawUrl}/wp-json/wp/v2/pages?per_page=100&_fields=id,title,slug,excerpt,content,featured_media,status,modified,parent`)}`;
+
+    try {
+      setStatus(`Connecting to ${domain}...`);
+      const res = await fetch(apiUrl);
+
+      if (!res.ok) throw new Error(`API returned ${res.status} — is this a WordPress site?`);
+
+      setStatus('Processing page data...');
+      const pages = await res.json();
+
+      if (!Array.isArray(pages) || pages.length === 0) {
+        throw new Error('No pages found or invalid response.');
+      }
+
+      setStatus(`Scoring ${pages.length} pages...`);
+
+      const scores = pages.map(page => scorePage(page, domain));
+
+      // Sort by score descending
+      const sorted = pages.map((p, i) => ({ page: p, result: scores[i] }))
+                          .sort((a, b) => b.result.score - a.result.score);
+
+      renderSummary(pages, scores);
+
+      sorted.forEach(({ page, result }, i) => renderCard(page, result, i));
+
+      clearStatus();
+      $('timestamp').textContent = `Audited ${new Date().toLocaleTimeString()}`;
+
+    } catch (err) {
+      clearStatus();
+      showError(err.message);
+    } finally {
+      $('audit-btn').disabled = false;
+    }
+  }
+
+  // ─── Events ───────────────────────────────────────────────────
+  $('audit-btn').addEventListener('click', runAudit);
+
+  $('site-url').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runAudit();
+  });
+
+  // Auto-run on load
+  runAudit();
+</script>
+
+</body>
+</html>
