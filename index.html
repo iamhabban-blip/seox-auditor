@@ -731,8 +731,8 @@
     $('audit-btn').disabled = true;
 
     const domain = new URL(rawUrl).hostname;
-    const PROXY = 'https://corsproxy.io/?url=';
-    const apiUrl = `${PROXY}${encodeURIComponent(`${rawUrl}/wp-json/wp/v2/pages?per_page=100&_fields=id,title,slug,excerpt,content,featured_media,status,modified,parent`)}`;
+    const apiTarget = `${rawUrl}/wp-json/wp/v2/pages?per_page=100&_fields=id,title,slug,excerpt,content,featured_media,status,modified,parent`;
+    const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiTarget)}`;
 
     try {
       setStatus(`Connecting to ${domain}...`);
@@ -741,7 +741,8 @@
       if (!res.ok) throw new Error(`API returned ${res.status} — is this a WordPress site?`);
 
       setStatus('Processing page data...');
-      const pages = await res.json();
+      const wrapper = await res.json();
+      const pages = JSON.parse(wrapper.contents);
 
       if (!Array.isArray(pages) || pages.length === 0) {
         throw new Error('No pages found or invalid response.');
