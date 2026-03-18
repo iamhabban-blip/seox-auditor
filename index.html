@@ -4,216 +4,243 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SEOX — SEO Auditor</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --black: #030308;
-      --deep: #0d0415;
-      --card: #110820;
-      --border: rgba(180, 0, 255, 0.2);
+      --navy:        #080d1a;
+      --navy-mid:    #0e1628;
+      --navy-card:   #111b30;
+      --navy-glass:  rgba(14, 22, 40, 0.75);
+      --border:      rgba(120, 160, 255, 0.1);
+      --border-hot:  rgba(180, 0, 255, 0.35);
       --neon-purple: #b400ff;
-      --neon-red: #ff003c;
-      --neon-pink: #ff0080;
-      --neon-violet: #7b00ff;
-      --text: #e8d5ff;
-      --muted: rgba(232,213,255,0.35);
-      --mono: 'Share Tech Mono', monospace;
-      --display: 'Orbitron', sans-serif;
-      --body: 'Rajdhani', sans-serif;
-      --glow-purple: 0 0 20px rgba(180,0,255,0.6), 0 0 60px rgba(180,0,255,0.2);
-      --glow-red: 0 0 20px rgba(255,0,60,0.6), 0 0 60px rgba(255,0,60,0.2);
+      --neon-red:    #ff003c;
+      --neon-pink:   #ff0080;
+      --green:       #00e5a0;
+      --amber:       #ffaa00;
+      --text:        #dce8ff;
+      --muted:       rgba(180, 210, 255, 0.38);
+      --mono:        'DM Mono', monospace;
+      --display:     'Orbitron', sans-serif;
+      --body:        'Rajdhani', sans-serif;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: var(--body);
-      background: var(--black);
+      background: var(--navy);
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
       position: relative;
     }
 
+    /* ── Noise texture overlay ── */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image:
-        linear-gradient(rgba(180,0,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(180,0,255,0.04) 1px, transparent 1px);
-      background-size: 40px 40px;
+      opacity: 0.028;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
       pointer-events: none;
       z-index: 0;
     }
 
+    /* ── Atmospheric radial — top right only ── */
     body::after {
       content: '';
       position: fixed;
-      top: -200px;
-      left: -200px;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(180,0,255,0.08) 0%, transparent 70%);
+      top: -300px;
+      right: -200px;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(100, 0, 255, 0.07) 0%, transparent 65%);
       pointer-events: none;
       z-index: 0;
-      animation: blobFloat 8s ease-in-out infinite;
-    }
-
-    @keyframes blobFloat {
-      0%, 100% { transform: translate(0,0); }
-      50% { transform: translate(80px, 60px); }
-    }
-
-    .blob2 {
-      position: fixed;
-      bottom: -200px;
-      right: -100px;
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, rgba(255,0,60,0.07) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-      animation: blobFloat2 10s ease-in-out infinite;
-    }
-
-    @keyframes blobFloat2 {
-      0%, 100% { transform: translate(0,0); }
-      50% { transform: translate(-60px, -80px); }
     }
 
     .wrapper {
       position: relative;
       z-index: 1;
-      max-width: 1100px;
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 3rem 2rem 6rem;
+      padding: 3rem 2rem 8rem;
     }
 
+    /* ══════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════ */
     header {
-      margin-bottom: 3.5rem;
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 1rem;
+      padding-bottom: 2.5rem;
+      margin-bottom: 3rem;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 2rem;
+      animation: fadeDown 0.5s ease both;
     }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-wrap { display: flex; flex-direction: column; gap: 0.4rem; }
 
     .logo {
       font-family: var(--display);
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: 900;
-      letter-spacing: 0.05em;
-      background: linear-gradient(135deg, var(--neon-red), var(--neon-purple), var(--neon-pink));
+      letter-spacing: 0.08em;
+      background: linear-gradient(120deg, #ff003c 0%, #b400ff 55%, #ff0080 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 0 20px rgba(180,0,255,0.5));
+      filter: drop-shadow(0 0 18px rgba(180,0,255,0.4));
     }
 
     .tagline {
       font-family: var(--mono);
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       color: var(--muted);
-      letter-spacing: 0.2em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
     }
 
+    #timestamp {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+
+    /* ══════════════════════════════════════
+       INPUT BAR
+    ══════════════════════════════════════ */
     .audit-form {
       display: flex;
       gap: 0;
-      margin-bottom: 3rem;
+      margin-bottom: 2.5rem;
       position: relative;
+      animation: fadeDown 0.5s 0.1s ease both;
     }
 
-    .audit-form::before {
-      content: '//';
+    .input-prefix {
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-right: none;
       font-family: var(--mono);
-      font-size: 0.9rem;
+      font-size: 0.78rem;
       color: var(--neon-purple);
-      position: absolute;
-      left: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
-      z-index: 2;
+      letter-spacing: 0.05em;
+      user-select: none;
+      flex-shrink: 0;
     }
 
     #site-url {
       flex: 1;
-      background: var(--deep);
+      background: var(--navy-card);
       border: 1px solid var(--border);
       border-right: none;
       color: var(--text);
       font-family: var(--mono);
-      font-size: 0.9rem;
-      padding: 1rem 1rem 1rem 3rem;
+      font-size: 0.88rem;
+      padding: 1rem 1.2rem;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
     }
 
     #site-url::placeholder { color: var(--muted); }
+
     #site-url:focus {
-      border-color: var(--neon-purple);
-      box-shadow: var(--glow-purple);
+      border-color: var(--border-hot);
+      box-shadow: 0 0 0 1px rgba(180,0,255,0.2) inset;
     }
 
     #audit-btn {
-      background: linear-gradient(135deg, var(--neon-red), var(--neon-purple));
+      background: linear-gradient(135deg, #c200ff, #ff003c);
       border: none;
       color: #fff;
       font-family: var(--display);
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 700;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      padding: 1rem 2rem;
+      padding: 1rem 2.2rem;
       cursor: pointer;
       transition: filter 0.2s, transform 0.1s;
-      position: relative;
-      overflow: hidden;
+      white-space: nowrap;
     }
 
-    #audit-btn:hover { filter: brightness(1.3); }
+    #audit-btn:hover  { filter: brightness(1.25); }
     #audit-btn:active { transform: scale(0.98); }
-    #audit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    #audit-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
 
+    /* ══════════════════════════════════════
+       STATUS BAR
+    ══════════════════════════════════════ */
     #status-bar {
       font-family: var(--mono);
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       color: var(--neon-purple);
       margin-bottom: 2rem;
-      min-height: 1.2rem;
+      min-height: 1.1rem;
       letter-spacing: 0.1em;
       display: none;
+      align-items: center;
+      gap: 0.6rem;
     }
 
-    #status-bar.visible { display: block; }
+    #status-bar.visible { display: flex; }
 
     .status-dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
+      width: 6px; height: 6px;
       border-radius: 50%;
       background: var(--neon-purple);
-      margin-right: 8px;
+      flex-shrink: 0;
       animation: pulse 1s ease-in-out infinite;
-      vertical-align: middle;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
+      0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--neon-purple); }
+      50%       { opacity: 0.25; box-shadow: none; }
     }
 
+    /* ══════════════════════════════════════
+       ERROR
+    ══════════════════════════════════════ */
+    #error-msg {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--neon-red);
+      padding: 0.9rem 1.2rem;
+      border: 1px solid rgba(255,0,60,0.25);
+      background: rgba(255,0,60,0.05);
+      display: none;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+    }
+
+    #error-msg.visible { display: block; }
+
+    /* ══════════════════════════════════════
+       SUMMARY
+    ══════════════════════════════════════ */
     #summary {
       display: none;
-      background: var(--deep);
+      background: var(--navy-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border);
-      padding: 1.5rem 2rem;
+      padding: 2rem 2.5rem;
       margin-bottom: 2.5rem;
       position: relative;
       overflow: hidden;
@@ -229,203 +256,221 @@
 
     #summary.visible {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
       gap: 1.5rem;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .summary-stat { text-align: center; }
 
     .summary-stat .val {
       font-family: var(--display);
-      font-size: 2rem;
+      font-size: 2.4rem;
       font-weight: 900;
       background: linear-gradient(135deg, var(--neon-red), var(--neon-purple));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       display: block;
+      line-height: 1;
     }
 
     .summary-stat .lbl {
       font-family: var(--mono);
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: var(--muted);
-      letter-spacing: 0.15em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      margin-top: 0.3rem;
+      margin-top: 0.4rem;
+      display: block;
     }
 
+    /* ══════════════════════════════════════
+       PAGE CARDS
+    ══════════════════════════════════════ */
     .page-card {
-      background: var(--card);
+      background: var(--navy-glass);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border: 1px solid var(--border);
-      padding: 1.8rem;
-      margin-bottom: 1rem;
+      border-left: 3px solid transparent;
+      padding: 1.8rem 2rem;
+      margin-bottom: 0.85rem;
       position: relative;
       overflow: hidden;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, background 0.2s;
       animation: cardIn 0.4s ease both;
     }
 
     @keyframes cardIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .page-card:hover { border-color: rgba(180,0,255,0.45); }
-
-    .page-card::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 3px;
+    .page-card:hover {
+      background: rgba(14, 22, 40, 0.9);
+      border-color: rgba(120, 160, 255, 0.2);
     }
 
-    .card-grade-A .page-card::before { background: #00ff9f; box-shadow: 0 0 12px #00ff9f; }
-    .card-grade-B .page-card::before { background: var(--neon-purple); box-shadow: var(--glow-purple); }
-    .card-grade-C .page-card::before { background: #ff9f00; box-shadow: 0 0 12px #ff9f00; }
-    .card-grade-D .page-card::before { background: var(--neon-red); box-shadow: var(--glow-red); }
+    /* Grade left border colors */
+    .card-grade-A .page-card { border-left-color: var(--green); }
+    .card-grade-B .page-card { border-left-color: var(--neon-purple); }
+    .card-grade-C .page-card { border-left-color: var(--amber); }
+    .card-grade-D .page-card { border-left-color: var(--neon-red); }
 
     .card-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 1.2rem;
-      gap: 1rem;
+      margin-bottom: 1.4rem;
+      gap: 1.5rem;
     }
 
     .page-id {
       font-family: var(--mono);
-      font-size: 0.65rem;
-      color: var(--neon-purple);
-      letter-spacing: 0.2em;
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.3rem;
     }
 
     .page-title {
-      font-size: 1.05rem;
+      font-family: var(--body);
+      font-size: 1rem;
       font-weight: 700;
       color: #fff;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.25rem;
       line-height: 1.3;
     }
 
     .page-slug {
       font-family: var(--mono);
-      font-size: 0.72rem;
+      font-size: 0.67rem;
       color: var(--muted);
+      letter-spacing: 0.03em;
     }
 
-    .score-badge { text-align: center; flex-shrink: 0; }
+    /* Score badge */
+    .score-badge { text-align: right; flex-shrink: 0; }
 
     .score-num {
       font-family: var(--display);
-      font-size: 2.2rem;
+      font-size: 2.6rem;
       font-weight: 900;
       line-height: 1;
       display: block;
     }
 
-    .card-grade-A .score-num { color: #00ff9f; text-shadow: 0 0 20px #00ff9f; }
-    .card-grade-B .score-num { color: var(--neon-purple); text-shadow: var(--glow-purple); }
-    .card-grade-C .score-num { color: #ff9f00; text-shadow: 0 0 20px #ff9f00; }
-    .card-grade-D .score-num { color: var(--neon-red); text-shadow: var(--glow-red); }
+    .card-grade-A .score-num { color: var(--green);       text-shadow: 0 0 20px rgba(0,229,160,0.5); }
+    .card-grade-B .score-num { color: var(--neon-purple);  text-shadow: 0 0 20px rgba(180,0,255,0.5); }
+    .card-grade-C .score-num { color: var(--amber);        text-shadow: 0 0 20px rgba(255,170,0,0.5); }
+    .card-grade-D .score-num { color: var(--neon-red);     text-shadow: 0 0 20px rgba(255,0,60,0.5); }
 
     .score-grade {
       font-family: var(--mono);
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: var(--muted);
-      letter-spacing: 0.15em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
       margin-top: 0.2rem;
     }
 
+    /* ── Metric Pills ── */
     .metrics {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 0.6rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
     }
 
     .metric {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
       font-family: var(--mono);
-      font-size: 0.7rem;
-      color: var(--muted);
-      letter-spacing: 0.05em;
+      font-size: 0.64rem;
+      letter-spacing: 0.04em;
+      padding: 0.3rem 0.7rem;
+      border-radius: 3px;
+      line-height: 1.4;
+      white-space: nowrap;
     }
 
-    .metric-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
+    .metric.pass {
+      background: rgba(0, 229, 160, 0.08);
+      color: rgba(0, 229, 160, 0.85);
+      border: 1px solid rgba(0, 229, 160, 0.2);
     }
 
-    .metric.pass .metric-dot { background: #00ff9f; box-shadow: 0 0 6px #00ff9f; }
-    .metric.pass { color: rgba(232,213,255,0.7); }
-    .metric.fail .metric-dot { background: var(--neon-red); box-shadow: 0 0 6px var(--neon-red); }
-    .metric.partial .metric-dot { background: #ff9f00; box-shadow: 0 0 6px #ff9f00; }
-    .metric.partial { color: rgba(232,213,255,0.7); }
+    .metric.partial {
+      background: rgba(255, 170, 0, 0.08);
+      color: rgba(255, 170, 0, 0.85);
+      border: 1px solid rgba(255, 170, 0, 0.2);
+    }
 
+    .metric.fail {
+      background: rgba(255, 0, 60, 0.07);
+      color: rgba(255, 80, 110, 0.85);
+      border: 1px solid rgba(255, 0, 60, 0.2);
+    }
+
+    /* Score bar */
     .score-bar-wrap {
-      margin-top: 1.2rem;
-      height: 3px;
-      background: rgba(255,255,255,0.05);
+      margin-top: 1.4rem;
+      height: 2px;
+      background: rgba(255,255,255,0.04);
       position: relative;
       overflow: hidden;
     }
 
     .score-bar-fill {
       height: 100%;
-      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+      transition: width 0.9s cubic-bezier(0.4,0,0.2,1);
     }
 
-    .card-grade-A .score-bar-fill { background: linear-gradient(90deg, #00ff9f, #00ffcc); }
-    .card-grade-B .score-bar-fill { background: linear-gradient(90deg, var(--neon-violet), var(--neon-purple)); }
-    .card-grade-C .score-bar-fill { background: linear-gradient(90deg, #ff6a00, #ff9f00); }
+    .card-grade-A .score-bar-fill { background: linear-gradient(90deg, var(--green), #00ffcc); }
+    .card-grade-B .score-bar-fill { background: linear-gradient(90deg, #7b00ff, var(--neon-purple)); }
+    .card-grade-C .score-bar-fill { background: linear-gradient(90deg, #ff6a00, var(--amber)); }
     .card-grade-D .score-bar-fill { background: linear-gradient(90deg, var(--neon-red), var(--neon-pink)); }
 
-    #error-msg {
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      color: var(--neon-red);
-      padding: 1rem;
-      border: 1px solid rgba(255,0,60,0.3);
-      display: none;
-      letter-spacing: 0.05em;
-    }
+    /* ══════════════════════════════════════
+       SCROLLBAR
+    ══════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--navy); }
+    ::-webkit-scrollbar-thumb { background: rgba(180,0,255,0.4); border-radius: 3px; }
 
-    #error-msg.visible { display: block; }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--black); }
-    ::-webkit-scrollbar-thumb { background: var(--neon-purple); }
-
-    @media (max-width: 600px) {
+    /* ══════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════ */
+    @media (max-width: 620px) {
       .logo { font-size: 1.5rem; }
-      .audit-form { flex-direction: column; }
-      #site-url { border-right: 1px solid var(--border); border-bottom: none; }
-      #audit-btn { padding: 0.9rem; }
+      .audit-form { flex-wrap: wrap; }
+      .input-prefix { display: none; }
+      #site-url { border-right: 1px solid var(--border); }
+      #audit-btn { width: 100%; justify-content: center; }
+      .card-top { flex-direction: column; }
+      .score-badge { text-align: left; }
+      .metric { font-size: 0.6rem; }
     }
   </style>
 </head>
 <body>
 
-<div class="blob2"></div>
-
 <div class="wrapper">
   <header>
-    <div>
+    <div class="logo-wrap">
       <div class="logo">SEOX</div>
-      <div class="tagline">On-Page SEO Auditor — Any Website</div>
+      <div class="tagline">On-Page SEO Auditor — Any Platform</div>
     </div>
-    <div class="tagline" id="timestamp"></div>
+    <div id="timestamp"></div>
   </header>
 
   <div class="audit-form">
-    <input type="text" id="site-url" placeholder="https://anywebsite.com" />
+    <div class="input-prefix">https://</div>
+    <input type="text" id="site-url" placeholder="yourwebsite.com" />
     <button id="audit-btn">Run Audit</button>
   </div>
 
@@ -459,9 +504,6 @@
   }
 
   // ─── Fetch page HTML via our Netlify function ─────────────────
-  // We call our own /api/fetch-page endpoint, passing the target URL as a parameter.
-  // Our Netlify function runs server-side, fetches the HTML with real browser headers,
-  // and returns it to us. No CORS issues, no 403s from proxy IPs.
   async function fetchHTML(url) {
     const endpoint = `/api/fetch-page?url=${encodeURIComponent(url)}`;
     const res = await fetch(endpoint);
@@ -472,39 +514,23 @@
   }
 
   // ─── HTML Parsers ─────────────────────────────────────────────
-  // We use the browser's built-in DOMParser to parse raw HTML strings
-  // into a real DOM tree we can query — exactly like document.querySelector
-  // but on a separate document object, not the current page.
   function parseHTML(html) {
     const parser = new DOMParser();
     return parser.parseFromString(html, 'text/html');
   }
 
   function getTitle(doc) {
-    // <title> tag in <head>
     return (doc.querySelector('title')?.textContent || '').trim();
   }
 
   function getMetaDescription(doc) {
-    // <meta name="description" content="...">
     return (doc.querySelector('meta[name="description"]')?.getAttribute('content') || '').trim();
   }
 
-  function getH1s(doc) {
-    return doc.querySelectorAll('h1');
-  }
-
-  function getH2s(doc) {
-    return doc.querySelectorAll('h2');
-  }
-
-  function getH3s(doc) {
-    return doc.querySelectorAll('h3');
-  }
-
-  function getImages(doc) {
-    return doc.querySelectorAll('img');
-  }
+  function getH1s(doc)  { return doc.querySelectorAll('h1'); }
+  function getH2s(doc)  { return doc.querySelectorAll('h2'); }
+  function getH3s(doc)  { return doc.querySelectorAll('h3'); }
+  function getImages(doc) { return doc.querySelectorAll('img'); }
 
   function getCanonical(doc) {
     return doc.querySelector('link[rel="canonical"]')?.getAttribute('href') || '';
@@ -519,7 +545,6 @@
   }
 
   function getWordCount(doc) {
-    // Get text from body, strip tags, count words
     const body = doc.body?.innerText || doc.body?.textContent || '';
     return body.trim().split(/\s+/).filter(w => w.length > 0).length;
   }
@@ -550,7 +575,7 @@
 
   function getOpenGraph(doc) {
     const ogTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
-    const ogDesc = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+    const ogDesc  = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
     const ogImage = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
     return { ogTitle, ogDesc, ogImage };
   }
@@ -558,151 +583,148 @@
   function isSlugClean(slug) {
     const stopWords = ['and','the','of','in','a','to','for','on','with','is','it','at','by','or'];
     const parts = slug.split('-').filter(Boolean);
-    const hasStop = parts.some(p => stopWords.includes(p.toLowerCase()));
-    const tooLong = slug.length > 75;
+    const hasStop  = parts.some(p => stopWords.includes(p.toLowerCase()));
+    const tooLong  = slug.length > 75;
     const hasNumbers = /\d{4,}/.test(slug);
     return !hasStop && !tooLong && !hasNumbers;
   }
 
   // ─── Scoring Engine ───────────────────────────────────────────
-  // Each metric returns { label, pass: 'pass'|'partial'|'fail', points }
-  // Max total: 100 points
   function scorePage(doc, url, domain) {
     const metrics = [];
     let score = 0;
 
-    const title = getTitle(doc);
-    const metaDesc = getMetaDescription(doc);
-    const h1s = getH1s(doc);
-    const h2s = getH2s(doc);
-    const h3s = getH3s(doc);
-    const images = getImages(doc);
-    const canonical = getCanonical(doc);
-    const robots = getRobotsMeta(doc);
-    const schema = hasSchema(doc);
-    const wordCount = getWordCount(doc);
+    const title         = getTitle(doc);
+    const metaDesc      = getMetaDescription(doc);
+    const h1s           = getH1s(doc);
+    const h2s           = getH2s(doc);
+    const h3s           = getH3s(doc);
+    const images        = getImages(doc);
+    const canonical     = getCanonical(doc);
+    const robots        = getRobotsMeta(doc);
+    const schema        = hasSchema(doc);
+    const wordCount     = getWordCount(doc);
     const internalLinks = getInternalLinks(doc, domain);
     const externalLinks = getExternalLinks(doc, domain);
-    const viewport = getViewport(doc);
-    const og = getOpenGraph(doc);
+    const viewport      = getViewport(doc);
+    const og            = getOpenGraph(doc);
 
-    // Parse slug from URL
     const urlObj = new URL(url);
-    const slug = urlObj.pathname.replace(/^\/|\/$/g, '') || 'homepage';
+    const slug   = urlObj.pathname.replace(/^\/|\/$/g, '') || 'homepage';
     const imagesWithAlt = Array.from(images).filter(img => (img.getAttribute('alt') || '').trim().length > 1);
 
-    // 1. Title tag — 10pts
+    // 1. Title — 10pts
     if (title && title.length >= 30 && title.length <= 60) {
       score += 10; metrics.push({ label: `Title (${title.length} chars)`, pass: 'pass' });
     } else if (title && title.length > 0) {
-      score += 5; metrics.push({ label: `Title (${title.length} chars — not optimal)`, pass: 'partial' });
+      score += 5;  metrics.push({ label: `Title (${title.length} chars)`, pass: 'partial' });
     } else {
-      metrics.push({ label: 'Title tag missing', pass: 'fail' });
+      metrics.push({ label: 'Title missing', pass: 'fail' });
     }
 
     // 2. Meta description — 10pts
     if (metaDesc && metaDesc.length >= 120 && metaDesc.length <= 160) {
       score += 10; metrics.push({ label: `Meta desc (${metaDesc.length} chars)`, pass: 'pass' });
     } else if (metaDesc && metaDesc.length > 0) {
-      score += 5; metrics.push({ label: `Meta desc (${metaDesc.length} chars — not optimal)`, pass: 'partial' });
+      score += 5;  metrics.push({ label: `Meta desc (${metaDesc.length} chars)`, pass: 'partial' });
     } else {
-      metrics.push({ label: 'Meta description missing', pass: 'fail' });
+      metrics.push({ label: 'Meta desc missing', pass: 'fail' });
     }
 
-    // 3. H1 tag — 10pts
+    // 3. H1 — 10pts
     if (h1s.length === 1) {
-      score += 10; metrics.push({ label: 'H1 tag (1 found)', pass: 'pass' });
+      score += 10; metrics.push({ label: 'H1 (1 found)', pass: 'pass' });
     } else if (h1s.length > 1) {
-      score += 4; metrics.push({ label: `H1 overused (${h1s.length} found)`, pass: 'partial' });
+      score += 4;  metrics.push({ label: `H1 overused (${h1s.length})`, pass: 'partial' });
     } else {
-      metrics.push({ label: 'No H1 tag found', pass: 'fail' });
+      metrics.push({ label: 'No H1 tag', pass: 'fail' });
     }
 
-    // 4. H2/H3 structure — 5pts
+    // 4. H2/H3 — 5pts
     if (h2s.length >= 2) {
-      score += 5; metrics.push({ label: `Heading structure (${h2s.length} H2s, ${h3s.length} H3s)`, pass: 'pass' });
+      score += 5; metrics.push({ label: `${h2s.length} H2s / ${h3s.length} H3s`, pass: 'pass' });
     } else if (h2s.length === 1) {
-      score += 3; metrics.push({ label: `Minimal headings (${h2s.length} H2)`, pass: 'partial' });
+      score += 3; metrics.push({ label: `${h2s.length} H2 only`, pass: 'partial' });
     } else {
-      metrics.push({ label: 'No H2/H3 structure', pass: 'fail' });
+      metrics.push({ label: 'No H2/H3', pass: 'fail' });
     }
 
     // 5. Word count — 10pts
     if (wordCount >= 600) {
-      score += 10; metrics.push({ label: `Content depth (${wordCount} words)`, pass: 'pass' });
+      score += 10; metrics.push({ label: `${wordCount} words`, pass: 'pass' });
     } else if (wordCount >= 200) {
-      score += 5; metrics.push({ label: `Thin content (${wordCount} words)`, pass: 'partial' });
+      score += 5;  metrics.push({ label: `${wordCount} words (thin)`, pass: 'partial' });
     } else {
-      metrics.push({ label: `Very thin (${wordCount} words)`, pass: 'fail' });
+      metrics.push({ label: `${wordCount} words (very thin)`, pass: 'fail' });
     }
 
-    // 6. Image alt text — 10pts
+    // 6. Image alt — 10pts
     if (images.length === 0) {
-      score += 5; metrics.push({ label: 'No images (neutral)', pass: 'partial' });
+      score += 5; metrics.push({ label: 'No images', pass: 'partial' });
     } else if (imagesWithAlt.length === images.length) {
-      score += 10; metrics.push({ label: `Alt text (${imagesWithAlt.length}/${images.length} images)`, pass: 'pass' });
+      score += 10; metrics.push({ label: `Alt text ${imagesWithAlt.length}/${images.length}`, pass: 'pass' });
     } else if (imagesWithAlt.length > 0) {
-      score += 5; metrics.push({ label: `Alt text (${imagesWithAlt.length}/${images.length} images)`, pass: 'partial' });
+      score += 5;  metrics.push({ label: `Alt text ${imagesWithAlt.length}/${images.length}`, pass: 'partial' });
     } else {
-      metrics.push({ label: `No alt text (0/${images.length} images)`, pass: 'fail' });
+      metrics.push({ label: `No alt text (0/${images.length})`, pass: 'fail' });
     }
 
     // 7. Internal links — 8pts
     if (internalLinks >= 5) {
-      score += 8; metrics.push({ label: `Internal links (${internalLinks})`, pass: 'pass' });
+      score += 8; metrics.push({ label: `${internalLinks} internal links`, pass: 'pass' });
     } else if (internalLinks >= 2) {
-      score += 4; metrics.push({ label: `Few internal links (${internalLinks})`, pass: 'partial' });
+      score += 4; metrics.push({ label: `${internalLinks} internal links`, pass: 'partial' });
     } else {
       metrics.push({ label: 'No internal links', pass: 'fail' });
     }
 
     // 8. External links — 4pts
     if (externalLinks >= 1) {
-      score += 4; metrics.push({ label: `External links (${externalLinks})`, pass: 'pass' });
+      score += 4; metrics.push({ label: `${externalLinks} external links`, pass: 'pass' });
     } else {
       metrics.push({ label: 'No external links', pass: 'fail' });
     }
 
-    // 9. Canonical tag — 8pts
+    // 9. Canonical — 8pts
     if (canonical) {
-      score += 8; metrics.push({ label: 'Canonical tag set', pass: 'pass' });
+      score += 8; metrics.push({ label: 'Canonical set', pass: 'pass' });
     } else {
-      metrics.push({ label: 'No canonical tag', pass: 'fail' });
+      metrics.push({ label: 'No canonical', pass: 'fail' });
     }
 
-    // 10. Robots meta — 5pts
+    // 10. Robots — 5pts
     if (!robots || (!robots.includes('noindex') && !robots.includes('nofollow'))) {
-      score += 5; metrics.push({ label: 'Robots: indexable', pass: 'pass' });
+      score += 5; metrics.push({ label: 'Indexable', pass: 'pass' });
     } else {
       metrics.push({ label: `Robots: ${robots}`, pass: 'fail' });
     }
 
-    // 11. Schema markup — 5pts
+    // 11. Schema — 5pts
     if (schema) {
-      score += 5; metrics.push({ label: 'Schema markup (JSON-LD)', pass: 'pass' });
+      score += 5; metrics.push({ label: 'Schema (JSON-LD)', pass: 'pass' });
     } else {
-      metrics.push({ label: 'No schema markup', pass: 'fail' });
+      metrics.push({ label: 'No schema', pass: 'fail' });
     }
 
-    // 12. Viewport / mobile — 5pts
+    // 12. Viewport — 5pts
     if (viewport && viewport.includes('width=device-width')) {
-      score += 5; metrics.push({ label: 'Mobile viewport set', pass: 'pass' });
+      score += 5; metrics.push({ label: 'Mobile viewport', pass: 'pass' });
     } else {
-      metrics.push({ label: 'No mobile viewport', pass: 'fail' });
+      metrics.push({ label: 'No viewport meta', pass: 'fail' });
     }
 
-    // 13. Open Graph tags — 5pts
+    // 13. Open Graph — 5pts
     if (og.ogTitle && og.ogImage) {
-      score += 5; metrics.push({ label: 'Open Graph tags set', pass: 'pass' });
+      score += 5; metrics.push({ label: 'Open Graph set', pass: 'pass' });
     } else if (og.ogTitle || og.ogImage) {
-      score += 2; metrics.push({ label: 'Open Graph incomplete', pass: 'partial' });
+      score += 2; metrics.push({ label: 'Open Graph partial', pass: 'partial' });
     } else {
-      metrics.push({ label: 'No Open Graph tags', pass: 'fail' });
+      metrics.push({ label: 'No Open Graph', pass: 'fail' });
     }
 
     // 14. Clean slug — 5pts
     if (slug === 'homepage' || isSlugClean(slug)) {
-      score += 5; metrics.push({ label: 'Clean URL slug', pass: 'pass' });
+      score += 5; metrics.push({ label: 'Clean slug', pass: 'pass' });
     } else {
       metrics.push({ label: 'Slug needs work', pass: 'fail' });
     }
@@ -712,76 +734,59 @@
   }
 
   // ─── Sitemap / Page Discovery ─────────────────────────────────
-  // We fetch the sitemap to discover all pages on the site.
-  // Most sites have a sitemap at /sitemap.xml or /sitemap_index.xml.
-  // We extract <loc> tags which contain individual page URLs.
   async function discoverPages(baseUrl) {
-  const sitemapUrls = [
-    `${baseUrl}/sitemap.xml`,
-    `${baseUrl}/sitemap_index.xml`,
-    `${baseUrl}/page-sitemap.xml`,
-  ];
+    const sitemapUrls = [
+      `${baseUrl}/sitemap.xml`,
+      `${baseUrl}/sitemap_index.xml`,
+      `${baseUrl}/page-sitemap.xml`,
+    ];
 
-  // Filters out non-page URLs — images, assets, and child sitemaps
-  const isAuditablePage = url => {
-    const skip = /\.(jpg|jpeg|png|gif|webp|svg|pdf|mp4|mp3|css|js|xml)(\?.*)?$/i;
-    return url.startsWith('http') && !skip.test(url);
-  };
+    const isAuditablePage = url => {
+      const skip = /\.(jpg|jpeg|png|gif|webp|svg|pdf|mp4|mp3|css|js|xml)(\?.*)?$/i;
+      return url.startsWith('http') && !skip.test(url);
+    };
 
-  for (const sitemapUrl of sitemapUrls) {
-    try {
-      const html = await fetchHTML(sitemapUrl);
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(html, 'application/xml');
+    for (const sitemapUrl of sitemapUrls) {
+      try {
+        const html = await fetchHTML(sitemapUrl);
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(html, 'application/xml');
 
-      // Detect sitemap index — contains <sitemap> tags pointing to child sitemaps
-      const childSitemaps = Array.from(xml.querySelectorAll('sitemap loc'))
-        .map(el => el.textContent.trim())
-        .filter(u => u.startsWith('http'));
+        const childSitemaps = Array.from(xml.querySelectorAll('sitemap loc'))
+          .map(el => el.textContent.trim())
+          .filter(u => u.startsWith('http'));
 
-      if (childSitemaps.length > 0) {
-        // It's a sitemap index — crawl each child sitemap for real page URLs
-        const allPages = [];
-
-        for (const childUrl of childSitemaps) {
-          // Skip image/video/news sitemaps by name
-          if (/image|video|news|asset/i.test(childUrl)) continue;
-
-          try {
-            const childHtml = await fetchHTML(childUrl);
-            const childXml = parser.parseFromString(childHtml, 'application/xml');
-            const locs = Array.from(childXml.querySelectorAll('url loc'))
-              .map(el => el.textContent.trim())
-              .filter(isAuditablePage);
-
-            allPages.push(...locs);
-            if (allPages.length >= 10) break;
-          } catch (e) {
-            continue;
+        if (childSitemaps.length > 0) {
+          const allPages = [];
+          for (const childUrl of childSitemaps) {
+            if (/image|video|news|asset/i.test(childUrl)) continue;
+            try {
+              const childHtml = await fetchHTML(childUrl);
+              const childXml = parser.parseFromString(childHtml, 'application/xml');
+              const locs = Array.from(childXml.querySelectorAll('url loc'))
+                .map(el => el.textContent.trim())
+                .filter(isAuditablePage);
+              allPages.push(...locs);
+              if (allPages.length >= 10) break;
+            } catch (e) { continue; }
           }
+          if (allPages.length > 0) return allPages.slice(0, 10);
         }
 
-        if (allPages.length > 0) return allPages.slice(0, 10);
-      }
+        const locs = Array.from(xml.querySelectorAll('url loc'))
+          .map(el => el.textContent.trim())
+          .filter(isAuditablePage);
 
-      // Regular sitemap — extract <url><loc> tags directly
-      const locs = Array.from(xml.querySelectorAll('url loc'))
-        .map(el => el.textContent.trim())
-        .filter(isAuditablePage);
-
-      if (locs.length > 0) return locs.slice(0, 10);
-
-    } catch (e) {
-      continue;
+        if (locs.length > 0) return locs.slice(0, 10);
+      } catch (e) { continue; }
     }
-  }
 
-  return [baseUrl];
-}
+    return [baseUrl];
+  }
 
   // ─── Render ───────────────────────────────────────────────────
   function renderSummary(results) {
-    const avg = Math.round(results.reduce((a, r) => a + r.score, 0) / results.length);
+    const avg    = Math.round(results.reduce((a, r) => a + r.score, 0) / results.length);
     const aCount = results.filter(r => r.grade === 'A').length;
     const dCount = results.filter(r => r.grade === 'D').length;
 
@@ -789,32 +794,29 @@
     $('summary').innerHTML = `
       <div class="summary-stat"><span class="val">${results.length}</span><span class="lbl">Pages Audited</span></div>
       <div class="summary-stat"><span class="val">${avg}</span><span class="lbl">Avg Score</span></div>
-      <div class="summary-stat"><span class="val">${aCount}</span><span class="lbl">Grade A Pages</span></div>
-      <div class="summary-stat"><span class="val">${dCount}</span><span class="lbl">Critical Issues</span></div>
+      <div class="summary-stat"><span class="val">${aCount}</span><span class="lbl">Grade A</span></div>
+      <div class="summary-stat"><span class="val">${dCount}</span><span class="lbl">Critical</span></div>
     `;
   }
 
   function renderCard(result, url, index) {
     const container = $('pages-container');
-    const wrapper = document.createElement('div');
+    const wrapper   = document.createElement('div');
     wrapper.className = `card-grade-${result.grade}`;
-    wrapper.style.animationDelay = `${index * 0.07}s`;
+    wrapper.style.animationDelay = `${index * 0.06}s`;
 
     const metricsHTML = result.metrics.map(m => `
-      <div class="metric ${m.pass}">
-        <span class="metric-dot"></span>
-        <span>${m.label}</span>
-      </div>
+      <span class="metric ${m.pass}">${m.label}</span>
     `).join('');
 
     const displayTitle = result.title || result.slug || url;
-    const displaySlug = new URL(url).pathname || '/';
+    const displaySlug  = new URL(url).pathname || '/';
 
     wrapper.innerHTML = `
       <div class="page-card">
         <div class="card-top">
           <div class="card-meta">
-            <div class="page-id">PAGE ${index + 1}</div>
+            <div class="page-id">Page ${String(index + 1).padStart(2, '0')}</div>
             <div class="page-title">${displayTitle}</div>
             <div class="page-slug">${displaySlug}</div>
           </div>
@@ -855,25 +857,20 @@
     try {
       setStatus(`Discovering pages on ${domain}...`);
       const pages = await discoverPages(rawUrl);
-
       setStatus(`Found ${pages.length} pages — starting audit...`);
 
       const results = [];
 
       for (let i = 0; i < pages.length; i++) {
         const pageUrl = pages[i];
-        setStatus(`Auditing page ${i + 1} of ${pages.length}: ${new URL(pageUrl).pathname || '/'}`);
+        setStatus(`Auditing ${i + 1}/${pages.length} — ${new URL(pageUrl).pathname || '/'}`);
         try {
-          const html = await fetchHTML(pageUrl);
-          const doc = parseHTML(html);
+          const html   = await fetchHTML(pageUrl);
+          const doc    = parseHTML(html);
           const result = scorePage(doc, pageUrl, domain);
           results.push({ ...result, url: pageUrl });
-          // Render cards as they come in, one by one
           renderCard(result, pageUrl, i);
-        } catch (e) {
-          // Skip pages that fail individually
-          continue;
-        }
+        } catch (e) { continue; }
       }
 
       if (results.length === 0) throw new Error('Could not audit any pages. Site may be blocking requests.');
@@ -881,7 +878,7 @@
       results.sort((a, b) => b.score - a.score);
       renderSummary(results);
       clearStatus();
-      $('timestamp').textContent = `Audited ${new Date().toLocaleTimeString()}`;
+      $('timestamp').textContent = `Audited at ${new Date().toLocaleTimeString()}`;
 
     } catch (err) {
       clearStatus();
@@ -895,6 +892,5 @@
   $('audit-btn').addEventListener('click', runAudit);
   $('site-url').addEventListener('keydown', e => { if (e.key === 'Enter') runAudit(); });
 </script>
-
 </body>
 </html>
