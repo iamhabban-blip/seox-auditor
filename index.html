@@ -730,7 +730,10 @@
         const xml = parser.parseFromString(html, 'application/xml');
         const locs = Array.from(xml.querySelectorAll('loc'))
           .map(el => el.textContent.trim())
-          .filter(url => url.startsWith('http'));
+          .filter(url => {
+  const skip = /\.(jpg|jpeg|png|gif|webp|svg|pdf|mp4|mp3|css|js)(\?.*)?$/i;
+  return url.startsWith('http') && !skip.test(url);
+});
 
         if (locs.length > 0) return locs.slice(0, 10); // audit up to 10 pages
       } catch (e) {
