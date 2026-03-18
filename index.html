@@ -505,13 +505,14 @@
 
   // ─── Fetch page HTML via our Netlify function ─────────────────
   async function fetchHTML(url) {
-    const endpoint = `/api/fetch-page?url=${encodeURIComponent(url)}`;
-    const res = await fetch(endpoint);
-    if (!res.ok) throw new Error(`Function returned ${res.status}`);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    return data.html;
-  }
+  const endpoint = `/api/fetch-page?url=${encodeURIComponent(url)}`;
+  const res = await fetch(endpoint);
+  if (!res.ok) throw new Error(`Function returned ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  // Return full data object — callers that only need html still work
+  return { html: data.html, responseTime: data.responseTime || 0, sizeKb: data.sizeKb || 0 };
+}
 
   // ─── HTML Parsers ─────────────────────────────────────────────
   function parseHTML(html) {
@@ -579,6 +580,27 @@
     const ogImage = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
     return { ogTitle, ogDesc, ogImage };
   }
+  function getTwitterCard(doc) {
+  const card  = doc.querySelector('meta[name="twitter:card"]')?.getAttribute('content') || '';
+  const title = doc.querySelector('meta[name="twitter:title"]')?.getAttribute('content') || '';
+  return { card, title };
+}
+
+function isRobotsBlocked(robotsTxt, path) {
+  if (!robotsTxt) return false;
+  const lines = robotsTxt.split('\n').map(l => l.trim().toLowerCase());
+  let applicable = false;
+  for (const line of lines) {
+    if (line.startsWith('user-agent:')) {
+      applicable = line.includes('*') || line.includes('googlebot');
+    }
+    if (applicable && line.startsWith('disallow:')) {
+      const rule = line.replace('disallow:', '').trim();
+      if (rule && path.toLowerCase().startsWith(rule)) return true;
+    }
+  }
+  return false;
+}
 
   function isSlugClean(slug) {
     const stopWords = ['and','the','of','in','a','to','for','on','with','is','it','at','by','or'];
@@ -590,7 +612,7 @@
   }
 
   // ─── Scoring Engine ───────────────────────────────────────────
-  function scorePage(doc, url, domain) {
+  function scorePage(doc, url, domain, responseTime = 0, sizeKb = 0) {
     const metrics = [];
     let score = 0;
 
@@ -729,8 +751,42 @@
       metrics.push({ label: 'Slug needs work', pass: 'fail' });
     }
 
+    // 15. Response time — 5pts
+if (responseTime > 0 && responseTime <= 800) {
+  score += 5; metrics.push({ label: `${responseTime}ms response`, pass: 'pass' });
+} else if (responseTime > 800 && responseTime <= 2000) {
+  score += 2; metrics.push({ label: `${responseTime}ms response (slow)`, pass: 'partial' });
+} else if (responseTime > 2000) {
+  metrics.push({ label: `${responseTime}ms response (critical)`, pass: 'fail' });
+} else {
+  metrics.push({ label: 'Response time unknown', pass: 'partial' });
+}
+
+// 16. Page size — 5pts
+if (sizeKb > 0 && sizeKb <= 200) {
+  score += 5; metrics.push({ label: `Page size ${sizeKb}kb`, pass: 'pass' });
+} else if (sizeKb > 200 && sizeKb <= 500) {
+  score += 2; metrics.push({ label: `Page size ${sizeKb}kb (heavy)`, pass: 'partial' });
+} else if (sizeKb > 500) {
+  metrics.push({ label: `Page size ${sizeKb}kb (critical)`, pass: 'fail' });
+} else {
+  metrics.push({ label: 'Page size unknown', pass: 'partial' });
+}
+
+// 17. Twitter Card — 3pts
+const twitter = getTwitterCard(doc);
+if (twitter.card && twitter.title) {
+  score += 3; metrics.push({ label: 'Twitter Card set', pass: 'pass' });
+} else if (twitter.card || twitter.title) {
+  score += 1; metrics.push({ label: 'Twitter Card partial', pass: 'partial' });
+} else {
+  metrics.push({ label: 'No Twitter Card', pass: 'fail' });
+}
+
+// 18-19. Duplicate titles and meta desc — flagged after all pages run, stored on result for now
+// These are evaluated post-audit in renderSummary — store raw values for comparison
     const grade = score >= 85 ? 'A' : score >= 65 ? 'B' : score >= 45 ? 'C' : 'D';
-    return { score, grade, metrics, title, slug };
+    return { score, grade, metrics, title, slug, metaDesc: getMetaDescription(doc) };
   }
 
   // ─── Sitemap / Page Discovery ─────────────────────────────────
@@ -748,7 +804,7 @@
 
     for (const sitemapUrl of sitemapUrls) {
       try {
-        const html = await fetchHTML(sitemapUrl);
+        const { html } = await fetchHTML(sitemapUrl);
         const parser = new DOMParser();
         const xml = parser.parseFromString(html, 'application/xml');
 
@@ -865,9 +921,9 @@
         const pageUrl = pages[i];
         setStatus(`Auditing ${i + 1}/${pages.length} — ${new URL(pageUrl).pathname || '/'}`);
         try {
-          const html   = await fetchHTML(pageUrl);
-          const doc    = parseHTML(html);
-          const result = scorePage(doc, pageUrl, domain);
+          const { html, responseTime, sizeKb } = await fetchHTML(pageUrl);
+const doc = parseHTML(html);
+const result = scorePage(doc, pageUrl, domain, responseTime, sizeKb);
           results.push({ ...result, url: pageUrl });
           renderCard(result, pageUrl, i);
         } catch (e) { continue; }
@@ -875,8 +931,26 @@
 
       if (results.length === 0) throw new Error('Could not audit any pages. Site may be blocking requests.');
 
-      results.sort((a, b) => b.score - a.score);
-      renderSummary(results);
+// Duplicate title detection
+const titleCounts = {};
+results.forEach(r => { if (r.title) titleCounts[r.title] = (titleCounts[r.title] || 0) + 1; });
+const metaCounts = {};
+results.forEach(r => { if (r.metaDesc) metaCounts[r.metaDesc] = (metaCounts[r.metaDesc] || 0) + 1; });
+
+results.forEach(r => {
+  if (r.title && titleCounts[r.title] > 1) {
+    r.metrics.push({ label: 'Duplicate title', pass: 'fail' });
+    r.score = Math.max(0, r.score - 8);
+  }
+  if (r.metaDesc && metaCounts[r.metaDesc] > 1) {
+    r.metrics.push({ label: 'Duplicate meta desc', pass: 'fail' });
+    r.score = Math.max(0, r.score - 8);
+  }
+  r.grade = r.score >= 85 ? 'A' : r.score >= 65 ? 'B' : r.score >= 45 ? 'C' : 'D';
+});
+
+results.sort((a, b) => b.score - a.score);
+renderSummary(results);
       clearStatus();
       $('timestamp').textContent = `Audited at ${new Date().toLocaleTimeString()}`;
 
