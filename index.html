@@ -921,9 +921,7 @@ const childXml = parser.parseFromString(childHtml, 'application/xml');
         const pageUrl = pages[i];
         setStatus(`Auditing ${i + 1}/${pages.length} — ${new URL(pageUrl).pathname || '/'}`);
         try {
-          const fetchResult = await fetchHTML(pageUrl);
-console.log('fetchResult:', fetchResult);
-const { html, responseTime, sizeKb } = fetchResult;
+          const { html, responseTime, sizeKb } = await fetchHTML(pageUrl);
 const doc = parseHTML(html);
 const result = scorePage(doc, pageUrl, domain, responseTime, sizeKb);
           results.push({ ...result, url: pageUrl });
