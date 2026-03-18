@@ -716,34 +716,68 @@
   // Most sites have a sitemap at /sitemap.xml or /sitemap_index.xml.
   // We extract <loc> tags which contain individual page URLs.
   async function discoverPages(baseUrl) {
-    const sitemapUrls = [
-      `${baseUrl}/sitemap.xml`,
-      `${baseUrl}/sitemap_index.xml`,
-      `${baseUrl}/page-sitemap.xml`,
-    ];
+  const sitemapUrls = [
+    `${baseUrl}/sitemap.xml`,
+    `${baseUrl}/sitemap_index.xml`,
+    `${baseUrl}/page-sitemap.xml`,
+  ];
 
-    for (const sitemapUrl of sitemapUrls) {
-      try {
-        const html = await fetchHTML(sitemapUrl);
-        // Parse XML sitemap — extract all <loc> tags
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(html, 'application/xml');
-        const locs = Array.from(xml.querySelectorAll('loc'))
-          .map(el => el.textContent.trim())
-          .filter(url => {
-  const skip = /\.(jpg|jpeg|png|gif|webp|svg|pdf|mp4|mp3|css|js)(\?.*)?$/i;
-  return url.startsWith('http') && !skip.test(url);
-});
+  // Filters out non-page URLs — images, assets, and child sitemaps
+  const isAuditablePage = url => {
+    const skip = /\.(jpg|jpeg|png|gif|webp|svg|pdf|mp4|mp3|css|js|xml)(\?.*)?$/i;
+    return url.startsWith('http') && !skip.test(url);
+  };
 
-        if (locs.length > 0) return locs.slice(0, 10); // audit up to 10 pages
-      } catch (e) {
-        continue;
+  for (const sitemapUrl of sitemapUrls) {
+    try {
+      const html = await fetchHTML(sitemapUrl);
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(html, 'application/xml');
+
+      // Detect sitemap index — contains <sitemap> tags pointing to child sitemaps
+      const childSitemaps = Array.from(xml.querySelectorAll('sitemap loc'))
+        .map(el => el.textContent.trim())
+        .filter(u => u.startsWith('http'));
+
+      if (childSitemaps.length > 0) {
+        // It's a sitemap index — crawl each child sitemap for real page URLs
+        const allPages = [];
+
+        for (const childUrl of childSitemaps) {
+          // Skip image/video/news sitemaps by name
+          if (/image|video|news|asset/i.test(childUrl)) continue;
+
+          try {
+            const childHtml = await fetchHTML(childUrl);
+            const childXml = parser.parseFromString(childHtml, 'application/xml');
+            const locs = Array.from(childXml.querySelectorAll('url loc'))
+              .map(el => el.textContent.trim())
+              .filter(isAuditablePage);
+
+            allPages.push(...locs);
+            if (allPages.length >= 10) break;
+          } catch (e) {
+            continue;
+          }
+        }
+
+        if (allPages.length > 0) return allPages.slice(0, 10);
       }
-    }
 
-    // Fallback: just audit the homepage
-    return [baseUrl];
+      // Regular sitemap — extract <url><loc> tags directly
+      const locs = Array.from(xml.querySelectorAll('url loc'))
+        .map(el => el.textContent.trim())
+        .filter(isAuditablePage);
+
+      if (locs.length > 0) return locs.slice(0, 10);
+
+    } catch (e) {
+      continue;
+    }
   }
+
+  return [baseUrl];
+}
 
   // ─── Render ───────────────────────────────────────────────────
   function renderSummary(results) {
