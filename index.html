@@ -817,8 +817,8 @@ if (twitter.card && twitter.title) {
           for (const childUrl of childSitemaps) {
             if (/image|video|news|asset/i.test(childUrl)) continue;
             try {
-              const childHtml = await fetchHTML(childUrl);
-              const childXml = parser.parseFromString(childHtml, 'application/xml');
+              const { html: childHtml } = await fetchHTML(childUrl);
+const childXml = parser.parseFromString(childHtml, 'application/xml');
               const locs = Array.from(childXml.querySelectorAll('url loc'))
                 .map(el => el.textContent.trim())
                 .filter(isAuditablePage);
