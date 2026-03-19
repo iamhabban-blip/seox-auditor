@@ -823,17 +823,17 @@ const childXml = parser.parseFromString(childHtml, 'application/xml');
                 .map(el => el.textContent.trim())
                 .filter(isAuditablePage);
               allPages.push(...locs);
-              if (allPages.length >= 10) break;
+              if (allPages.length >= 2) break;
             } catch (e) { continue; }
           }
-          if (allPages.length > 0) return allPages.slice(0, 10);
+          if (allPages.length > 0) return allPages.slice(0, 2);
         }
 
         const locs = Array.from(xml.querySelectorAll('url loc'))
           .map(el => el.textContent.trim())
           .filter(isAuditablePage);
 
-        if (locs.length > 0) return locs.slice(0, 10);
+        if (locs.length > 0) return locs.slice(0, 2);
       } catch (e) { continue; }
     }
 
